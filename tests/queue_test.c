@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#define MESSAGE_INIT(arr, type) message_init(arr, sizeof(arr), type)
+
 int test_init(void) {
   Queue q = {.capacity = 1};
   assert(queue_init(&q, q.capacity) == QUEUE_OK);
@@ -31,6 +33,7 @@ int test_destroy(void) {
   return 0;
 }
 
+// TODO: add head and tail asserts
 int test_push_and_pop(void) {
   Queue q = {0, .capacity = 1};
   queue_init(&q, q.capacity);
@@ -70,33 +73,42 @@ int test_push_into_full(void) {
   queue_destroy(&q);
   return 0;
 }
+
 int test_fifo_order(void) {
   uint8_t pp[] = {1, 1, 1};
-  Message msg1 = message_init(pp, (MsgType)1);
+  Message msg1 = MESSAGE_INIT(pp, 1);
   assert(memcmp(msg1.payload, (uint8_t[]){1, 1, 1}, 3) == 0);
 
   uint8_t pp2[] = {2, 2, 2};
-  Message msg2 = message_init(pp2, (MsgType)2);
+  Message msg2 = MESSAGE_INIT(pp2, 2);
   assert(memcmp(msg2.payload, (uint8_t[]){2, 2, 2}, 3) == 0);
 
   uint8_t pp3[] = {3, 3, 3};
-  Message msg3 = message_init(pp3, (MsgType)3);
-  assert(memcmp(msg2.payload, (uint8_t[]){3, 3, 3}, 3) == 0);
+  Message msg3 = MESSAGE_INIT(pp3, 3);
+  assert(memcmp(msg3.payload, (uint8_t[]){3, 3, 3}, 3) == 0);
 
   Queue q = {.capacity = 3};
   Message tmp = {0};
   queue_init(&q, q.capacity);
-  assert(queue_push(&q, &msg1) == QUEUE_OK);
-  assert(queue_push(&q, &msg2) == QUEUE_OK);
-  assert(queue_push(&q, &msg3) == QUEUE_OK);
-  assert(queue_pop(&q, &tmp) == QUEUE_OK &&
-         memcmp(tmp.payload, (uint8_t[]){3, 3, 3}, 3) == 0);
-  assert(queue_pop(&q, &tmp) == QUEUE_OK &&
-         memcmp(tmp.payload, (uint8_t[]){2, 2, 2}, 3) == 0);
+
+  assert(queue_push(&q, &msg1) == QUEUE_OK && q.size == 1 && q.tail == 1 &&
+         q.head == 0);
+  assert(queue_push(&q, &msg2) == QUEUE_OK && q.size == 2 && q.tail == 2 &&
+         q.head == 0);
+  assert(queue_push(&q, &msg3) == QUEUE_OK && q.size == 3 && q.tail == 0 &&
+         q.head == 0);
+
   assert(queue_pop(&q, &tmp) == QUEUE_OK &&
          memcmp(tmp.payload, (uint8_t[]){1, 1, 1}, 3) == 0);
+  assert(q.tail == 0 && q.head == 1 && tmp.type == 1);
 
-  assert(queue_pop(&q, &tmp) == QUEUE_OK);
+  assert(queue_pop(&q, &tmp) == QUEUE_OK &&
+         memcmp(tmp.payload, (uint8_t[]){2, 2, 2}, 3) == 0);
+  assert(q.tail == 0 && q.head == 2 && tmp.type == 2);
+
+  assert(queue_pop(&q, &tmp) == QUEUE_OK &&
+         memcmp(tmp.payload, (uint8_t[]){3, 3, 3}, 3) == 0);
+  assert(q.tail == 0 && q.head == 0 && tmp.type == 3);
 
   queue_destroy(&q);
   return 0;
@@ -119,6 +131,8 @@ void test_all(void) {
   printf("==== test test_push_into_full PASSED ====\n");
   assert(test_push_and_pop() == 0);
   printf("==== test test_push_and_pop PASSED ====\n");
+  assert(test_fifo_order() == 0);
+  printf("==== test test_fifo_order PASSED ====\n");
   printf("\n==== All tests PASSED ====\n");
 }
 

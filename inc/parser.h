@@ -69,7 +69,7 @@ typedef struct {
   uint8_t payload[256];
 } Message;
 
-Message message_init(uint8_t *payload, MsgType type);
+Message message_init(uint8_t *payload, size_t len, MsgType type);
 ParseStatus parse_message(const uint8_t *buf, size_t len, Message *out);
 uint16_t calc_sum(const uint8_t *buf, const size_t len);
 const char *type_to_str(ParseStatus parse_status);

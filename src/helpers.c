@@ -1,14 +1,17 @@
 #include "parser.h"
 
 // VERY unsafe constructor only used for quick init in tests.
-Message message_init(uint8_t *payload, MsgType type) {
-  size_t len = sizeof(payload);
+// sets everything except the data and type of a message obj to 0
+Message message_init(uint8_t *payload, size_t len, MsgType type) {
+  if (!payload)
+    return (Message){0};
   if (len > 256)
     len = 256;
   Message msg = {.payload_len = len, .type = type};
   memcpy(msg.payload, payload, len);
   return msg;
 }
+
 const char *type_to_str(ParseStatus parse_status) {
   switch (parse_status) {
   case PARSE_OK:

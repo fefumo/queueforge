@@ -48,11 +48,11 @@ void queue_destroy(Queue *q) {
 }
 
 QueueStatus queue_push(Queue *q, const Message *msg) {
-  if (!q)
+  if (!q || !msg)
     return QUEUE_ERR_INVALID_ARG;
   if (queue_is_full(q))
     return QUEUE_ERR_FULL;
-  q->data[q->tail] = *msg; // ig it should make a copy
+  q->data[q->tail] = *msg; // copy by value
   q->tail = (q->tail + 1) % q->capacity;
   q->size++;
   return QUEUE_OK;
@@ -64,6 +64,7 @@ QueueStatus queue_pop(Queue *q, Message *out) {
   if (queue_size(q) == 0)
     return QUEUE_ERR_EMPTY;
   *out = q->data[q->head];
+  q->head = (q->head + 1) % q->capacity;
   q->size--;
   return QUEUE_OK;
 }
