@@ -1,12 +1,14 @@
 #include "parser.h"
 
 // VERY unsafe constructor only used for quick init in tests.
-// sets everything except the data and type of a message obj to 0
+// Sets everything except the payload and type of a message object to 0
 Message message_init(uint8_t *payload, size_t len, MsgType type) {
   if (!payload)
     return (Message){0};
   if (len > 256)
     len = 256;
+  if (type > 4)
+    type = type % 4;
   Message msg = {.payload_len = len, .type = type};
   memcpy(msg.payload, payload, len);
   return msg;
@@ -52,7 +54,7 @@ void print_payload(Message *msg) {
   for (; i < msg->payload_len; i++) {
     printf("%d", msg->payload[i]);
     if (i + 1 < msg->payload_len) {
-      printf(" ,");
+      printf(", ");
     }
   }
 

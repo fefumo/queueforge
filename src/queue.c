@@ -19,12 +19,10 @@ size_t queue_capacity(const Queue *q) { return q->capacity; }
 
 QueueStatus queue_init(Queue *q, size_t capacity) {
   if (q == NULL || capacity == 0) {
-    printf("%s", "zero capacity\n");
     return QUEUE_ERR_INVALID_ARG;
   }
   Message *qp = malloc(capacity * sizeof(Message));
   if (qp == NULL) {
-    printf("%s", "malloc failed\n");
     return QUEUE_ERR_MALLOC;
   }
   q->data = qp;
