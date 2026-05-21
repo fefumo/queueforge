@@ -18,7 +18,7 @@ size_t queue_size(const Queue *q) { return q->size; }
 size_t queue_capacity(const Queue *q) { return q->capacity; }
 
 QueueStatus queue_init(Queue *q, size_t capacity) {
-  if (q == NULL || capacity == 0) {
+  if (!q || capacity == 0) {
     return QUEUE_ERR_INVALID_ARG;
   }
   Message *qp = malloc(capacity * sizeof(Message));
@@ -46,7 +46,7 @@ void queue_destroy(Queue *q) {
 }
 
 QueueStatus queue_push(Queue *q, const Message *msg) {
-  if (!q || !msg)
+  if (!q || !msg || !q->data || q->capacity == 0)
     return QUEUE_ERR_INVALID_ARG;
   if (queue_is_full(q))
     return QUEUE_ERR_FULL;
@@ -57,7 +57,7 @@ QueueStatus queue_push(Queue *q, const Message *msg) {
 }
 
 QueueStatus queue_pop(Queue *q, Message *out) {
-  if (!q || !out)
+  if (!q || !out || !q->data || q->capacity == 0)
     return QUEUE_ERR_INVALID_ARG;
   if (queue_size(q) == 0)
     return QUEUE_ERR_EMPTY;

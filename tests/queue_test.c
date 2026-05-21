@@ -9,7 +9,8 @@
 int test_init(void) {
   Queue q = {.capacity = 1};
   assert(queue_init(&q, q.capacity) == QUEUE_OK);
-  free(q.data);
+  if (q.data)
+    free(q.data);
   return 0;
 }
 
