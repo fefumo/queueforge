@@ -1,34 +1,33 @@
 CC := gcc
-CFLAGS := -Wall -Wextra -Wpedantic -std=c11 -g -fsanitize=address,undefined -Iinc -pthread
+CFLAGS := -Wall -Wextra -Wpedantic -std=c11 -g -fsanitize=address,undefined -Iinc
+LDFLAGS := -fsanitize=address,undefined -pthread
 
-BUILD_DIR = build
-TEST_DIR = tests
-SRC_DIR = src
-TARGET = parser
-TEST_QUEUE_TARGET = run_queue_tests
-TEST_TS_QUEUE_TARGET = run_ts_queue_tests
+BUILD_DIR := build
+TEST_DIR := tests
+SRC_DIR := src
 
-SRCS := $(wildcard $(SRC_DIR)/*.c)
-TEST_QUEUE_SRCS := $(SRC_DIR)/queue.c \
-									 $(SRC_DIR)/helpers.c \
-									 $(TEST_DIR)/queue_test.c
-TEST_TS_QUEUE_SRCS := $(SRC_DIR)/queue.c \
-											$(SRC_DIR)/helpers.c \
-											$(SRC_DIR)/ts_queue.c \
-											$(TEST_DIR)/ts_queue_test.c
+TARGET := parser
+TEST_QUEUE_TARGET := run_queue_tests
+TEST_TS_QUEUE_TARGET := run_ts_queue_tests
 
-OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(SRCS))
-TEST_QUEUE_OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(TEST_QUEUE_SRCS))
-TEST_TS_QUEUE_OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(TEST_TS_QUEUE_SRCS))
+APP_SRCS := src/main.c src/parser.c src/helpers.c
+QUEUE_TEST_SRCS := src/queue.c src/helpers.c tests/queue_test.c
+TS_QUEUE_TEST_SRCS := src/queue.c src/ts_queue.c src/helpers.c tests/ts_queue_test.c
+
+APP_OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(APP_SRCS))
+QUEUE_TEST_OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(QUEUE_TEST_SRCS))
+TS_QUEUE_TEST_OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(TS_QUEUE_TEST_SRCS))
+
 INCS := $(wildcard inc/*.h)
-# TEST_OBJS := $(TEST_QUEUE_SRCS:%.c=$(BUILD_DIR)/%.o)
 
-.PHONY: all clean test_queue test_ts_queue
+.PHONY: all clean test test_queue test_ts_queue
 
 all: $(TARGET)
 
-$(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) $^ -o $(TARGET)
+test: test_queue test_ts_queue
+
+$(TARGET): $(APP_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 test_queue: $(TEST_QUEUE_TARGET)
 	./$(TEST_QUEUE_TARGET)
@@ -36,11 +35,11 @@ test_queue: $(TEST_QUEUE_TARGET)
 test_ts_queue: $(TEST_TS_QUEUE_TARGET)
 	./$(TEST_TS_QUEUE_TARGET)
 
-$(TEST_QUEUE_TARGET): $(TEST_QUEUE_OBJS)
-	$(CC) $(CFLAGS) $^ -o $@
+$(TEST_QUEUE_TARGET): $(QUEUE_TEST_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
-$(TEST_TS_QUEUE_TARGET): $(TEST_TS_QUEUE_OBJS)
-	$(CC) $(CFLAGS) $^ -o $@
+$(TEST_TS_QUEUE_TARGET): $(TS_QUEUE_TEST_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 $(BUILD_DIR)/%.o: %.c $(INCS)
 	mkdir -p $(dir $@)

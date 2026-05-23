@@ -32,14 +32,8 @@ Build main target with:
 make
 ```
 
-Build queue tests:
+Test everything with:
 
 ```bash
-make test_queue
-```
-
-Build & run thread-safe queue tests:
-
-```bash
-make test_ts_queue
+make test
 ```
