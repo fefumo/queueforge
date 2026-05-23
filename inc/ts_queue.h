@@ -26,9 +26,6 @@ void ts_queue_destroy(TsQueue *ts_q);
 TsQueueStatus ts_queue_push(TsQueue *ts_q, const Message *msg);
 TsQueueStatus ts_queue_pop(TsQueue *ts_q, Message *out);
 
-void cleanup_exit(TsQueue *ts_q, const char *message);
-
 void ts_queue_close(TsQueue *ts_q);
-void cleanup_exit(TsQueue *ts_q, const char *message);
 
 #endif // !TS_QUEUE_H

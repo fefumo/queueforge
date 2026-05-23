@@ -4,7 +4,8 @@
 #include <stdlib.h>
 
 #define THREAD_NUM 2
-#define MESSAGE_COUNT 10
+#define MESSAGE_COUNT 10000
+#define QUEUE_CAPACITY 8
 
 /*
  * Creates a message with its actual id set in the first 4 bytes of payload
@@ -58,7 +59,6 @@ static void *start_popping(void *arg) {
     assert(id == i);
   }
 
-  ts_queue_close(ts_queue);
   pthread_exit(NULL);
 }
 
@@ -67,7 +67,7 @@ int main(void) {
   int i, rs;
   pthread_t threads[THREAD_NUM];
 
-  if (ts_queue_init(&ts_queue, MESSAGE_COUNT) != TS_QUEUE_OK)
+  if (ts_queue_init(&ts_queue, QUEUE_CAPACITY) != TS_QUEUE_OK)
     exit(EXIT_FAILURE);
 
   printf("initialzed ts_queue...\n");

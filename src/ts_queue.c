@@ -3,17 +3,14 @@
 #include <pthread.h>
 #include <stdlib.h>
 
-void cleanup_exit(TsQueue *ts_q, const char *message) {
-  ts_queue_destroy(ts_q);
-
-  perror(message);
-
-  exit(EXIT_FAILURE);
-}
-
 void ts_queue_close(TsQueue *ts_q) {
   pthread_mutex_lock(&ts_q->mutex);
+
   ts_q->closed = 1;
+
+  pthread_cond_broadcast(&ts_q->not_empty);
+  pthread_cond_broadcast(&ts_q->not_full);
+
   pthread_mutex_unlock(&ts_q->mutex);
 }
 
@@ -26,18 +23,27 @@ TsQueueStatus ts_queue_init(TsQueue *ts_q, size_t capacity) {
   QueueStatus queue_status_res = queue_init(&ts_q->queue, capacity);
 
   if (queue_status_res != QUEUE_OK)
-    cleanup_exit(ts_q, "Error: failed to initialize queue.");
+    return TS_QUEUE_ERR_INIT;
 
-  if (pthread_mutex_init(&ts_q->mutex, NULL))
-    cleanup_exit(ts_q, "Error: failed to initialize mutex.");
-  if (pthread_cond_init(&ts_q->not_empty, NULL))
-    cleanup_exit(ts_q, "Error: failed to initialize cond variable not_empty.");
-  if (pthread_cond_init(&ts_q->not_full, NULL))
-    cleanup_exit(ts_q, "Error: failed to initialize cond variable not_full.");
+  if (pthread_mutex_init(&ts_q->mutex, NULL)) {
+    queue_destroy(&ts_q->queue);
+    return TS_QUEUE_ERR_INIT;
+  }
+  if (pthread_cond_init(&ts_q->not_empty, NULL)) {
+    queue_destroy(&ts_q->queue);
+    return TS_QUEUE_ERR_INIT;
+  }
+  if (pthread_cond_init(&ts_q->not_full, NULL)) {
+    queue_destroy(&ts_q->queue);
+    return TS_QUEUE_ERR_INIT;
+  }
+
+  ts_q->closed = 0;
 
   return TS_QUEUE_OK;
 }
 
+// Can only be used on fully initialized TsQueue obj
 void ts_queue_destroy(TsQueue *ts_q) {
   if (!ts_q)
     return;
@@ -57,7 +63,7 @@ TsQueueStatus ts_queue_push(TsQueue *ts_q, const Message *msg) {
 
   pthread_mutex_lock(&ts_q->mutex);
 
-  while (queue_is_full(&ts_q->queue) || ts_q->closed == 1) {
+  while (queue_is_full(&ts_q->queue) && !ts_q->closed) {
     pthread_cond_wait(&ts_q->not_full, &ts_q->mutex);
   }
 
