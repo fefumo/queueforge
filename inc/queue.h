@@ -17,7 +17,7 @@ typedef struct {
   size_t capacity;
   size_t head;
   size_t tail;
-  size_t size;
+  size_t size; // Without `size`, the `head == tail` state is undefined
 } Queue;
 
 QueueStatus queue_init(Queue *q, size_t capacity);

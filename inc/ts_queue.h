@@ -15,9 +15,9 @@ typedef enum {
 typedef struct {
   Queue queue;
   pthread_mutex_t mutex;
-  pthread_cond_t not_empty;
-  pthread_cond_t not_full;
-  int closed;
+  pthread_cond_t not_empty; // used to wake consumers when a message becomes available
+  pthread_cond_t not_full;  // used to wake producers when free space becomes available
+  int closed; // indicates that no new messages should be accepted
 } TsQueue;
 
 TsQueueStatus ts_queue_init(TsQueue *ts_q, size_t capacity);
