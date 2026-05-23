@@ -25,19 +25,23 @@ TsQueueStatus ts_queue_init(TsQueue *ts_q, size_t capacity) {
   if (queue_status_res != QUEUE_OK)
     return TS_QUEUE_ERR_INIT;
 
-  if (pthread_mutex_init(&ts_q->mutex, NULL)) {
-    queue_destroy(&ts_q->queue);
-    return TS_QUEUE_ERR_INIT;
-  }
-  if (pthread_cond_init(&ts_q->not_empty, NULL)) {
-    queue_destroy(&ts_q->queue);
-    return TS_QUEUE_ERR_INIT;
-  }
-  if (pthread_cond_init(&ts_q->not_full, NULL)) {
+  if (pthread_mutex_init(&ts_q->mutex, NULL) != 0) {
     queue_destroy(&ts_q->queue);
     return TS_QUEUE_ERR_INIT;
   }
 
+  if (pthread_cond_init(&ts_q->not_empty, NULL) != 0) {
+    pthread_mutex_destroy(&ts_q->mutex);
+    queue_destroy(&ts_q->queue);
+    return TS_QUEUE_ERR_INIT;
+  }
+
+  if (pthread_cond_init(&ts_q->not_full, NULL) != 0) {
+    pthread_cond_destroy(&ts_q->not_empty);
+    pthread_mutex_destroy(&ts_q->mutex);
+    queue_destroy(&ts_q->queue);
+    return TS_QUEUE_ERR_INIT;
+  }
   ts_q->closed = 0;
 
   return TS_QUEUE_OK;
