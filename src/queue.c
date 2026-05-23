@@ -1,13 +1,13 @@
 #include "queue.h"
 #include <stdlib.h>
 
-int queue_is_empty(const Queue *q) {
+inline int queue_is_empty(const Queue *q) {
   if (q->size == 0)
     return 1;
   return 0;
 }
 
-int queue_is_full(const Queue *q) {
+inline int queue_is_full(const Queue *q) {
   if (q->size == q->capacity)
     return 1;
   return 0;
