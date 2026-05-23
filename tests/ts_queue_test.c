@@ -51,13 +51,14 @@ static void *start_pushing(void *arg) {
 
 static void *start_popping(void *arg) {
   TsQueue *ts_queue = (TsQueue *)arg;
+  Message msg = {0};
   for (uint32_t i = 0; i < MESSAGE_COUNT; ++i) {
-    Message msg = {0};
     assert(ts_queue_pop(ts_queue, &msg) == TS_QUEUE_OK);
     // printf("POPPED msg %d\n", i);
     uint32_t id = get_id(&msg);
     assert(id == i);
   }
+  assert(ts_queue_pop(ts_queue, &msg) == TS_QUEUE_CLOSED);
 
   pthread_exit(NULL);
 }
@@ -65,6 +66,7 @@ static void *start_popping(void *arg) {
 int main(void) {
   TsQueue ts_queue;
   int i, rs;
+  int created = 0;
   pthread_t threads[THREAD_NUM];
 
   if (ts_queue_init(&ts_queue, QUEUE_CAPACITY) != TS_QUEUE_OK)
@@ -83,12 +85,14 @@ int main(void) {
     }
 
     if (rs != 0) {
-      perror("Couldn't create a thread...");
+      fprintf(stderr, "pthread_create failed: %s\n", strerror(rs));
       break;
     }
+
+    created++;
   }
   printf("waiting for the threads to end...\n");
-  for (i = 0; i < THREAD_NUM; ++i) {
+  for (i = 0; i < created; ++i) {
     if (pthread_join(threads[i], NULL) != 0)
       perror("i am too lazy to fix the thread errors lol, it shouldn't 've "
              "happenned\n");

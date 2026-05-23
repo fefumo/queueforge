@@ -4,6 +4,8 @@
 #include <stdlib.h>
 
 void ts_queue_close(TsQueue *ts_q) {
+  if (!ts_q)
+    return;
   pthread_mutex_lock(&ts_q->mutex);
 
   ts_q->closed = 1;
