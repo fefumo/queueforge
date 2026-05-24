@@ -61,14 +61,12 @@ void ts_queue_destroy(TsQueue *ts_q) {
     queue_destroy(&ts_q->queue);
 
   switch (ts_q->initialized) {
-      case 1:
-        pthread_mutex_destroy(&ts_q->mutex);
-      case 2:
-        pthread_cond_destroy(&ts_q->not_empty);
-      case 3:
-        pthread_cond_destroy(&ts_q->not_full);
-      default:
-        return;
+  case 1:
+    pthread_mutex_destroy(&ts_q->mutex);
+  case 2:
+    pthread_cond_destroy(&ts_q->not_empty);
+  case 3:
+    pthread_cond_destroy(&ts_q->not_full);
   }
 }
 
