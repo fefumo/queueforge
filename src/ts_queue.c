@@ -23,6 +23,7 @@ TsQueueStatus ts_queue_init(TsQueue *ts_q, size_t capacity) {
     return TS_QUEUE_ERR_INVALID_ARG;
 
   QueueStatus queue_status_res = queue_init(&ts_q->queue, capacity);
+  ts_q->initialized = 0;
 
   if (queue_status_res != QUEUE_OK)
     return TS_QUEUE_ERR_INIT;
@@ -31,12 +32,14 @@ TsQueueStatus ts_queue_init(TsQueue *ts_q, size_t capacity) {
     queue_destroy(&ts_q->queue);
     return TS_QUEUE_ERR_INIT;
   }
+  ts_q->initialized++;
 
   if (pthread_cond_init(&ts_q->not_empty, NULL) != 0) {
     pthread_mutex_destroy(&ts_q->mutex);
     queue_destroy(&ts_q->queue);
     return TS_QUEUE_ERR_INIT;
   }
+  ts_q->initialized++;
 
   if (pthread_cond_init(&ts_q->not_full, NULL) != 0) {
     pthread_cond_destroy(&ts_q->not_empty);
@@ -44,20 +47,29 @@ TsQueueStatus ts_queue_init(TsQueue *ts_q, size_t capacity) {
     queue_destroy(&ts_q->queue);
     return TS_QUEUE_ERR_INIT;
   }
+  ts_q->initialized++;
+
   ts_q->closed = 0;
 
   return TS_QUEUE_OK;
 }
 
-// Can only be used on fully initialized TsQueue obj
 void ts_queue_destroy(TsQueue *ts_q) {
   if (!ts_q)
     return;
   if (ts_q->queue.data != NULL)
     queue_destroy(&ts_q->queue);
-  pthread_mutex_destroy(&ts_q->mutex);
-  pthread_cond_destroy(&ts_q->not_empty);
-  pthread_cond_destroy(&ts_q->not_full);
+
+  switch (ts_q->initialized) {
+      case 1:
+        pthread_mutex_destroy(&ts_q->mutex);
+      case 2:
+        pthread_cond_destroy(&ts_q->not_empty);
+      case 3:
+        pthread_cond_destroy(&ts_q->not_full);
+      default:
+        return;
+  }
 }
 
 TsQueueStatus ts_queue_push(TsQueue *ts_q, const Message *msg) {

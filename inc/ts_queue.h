@@ -18,6 +18,7 @@ typedef struct {
   pthread_cond_t not_empty; // used to wake consumers when a message becomes available
   pthread_cond_t not_full;  // used to wake producers when free space becomes available
   int closed; // indicates that no new messages should be accepted
+  size_t initialized; // uszed for correct destruction of mutex and conds
 } TsQueue;
 
 TsQueueStatus ts_queue_init(TsQueue *ts_q, size_t capacity);
