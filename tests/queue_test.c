@@ -263,7 +263,8 @@ void test_all(void) {
   printf("==== test test_capacity1 PASSED ====\n");
   assert(test_invalid_args() == 0);
   printf("==== test test_invalid_args PASSED ====\n");
-  printf("\n==== All tests PASSED ====\n");
+
+  printf("\n==== All queue tests PASSED ====\n");
 }
 
 int main(void) { test_all(); }
